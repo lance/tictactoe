@@ -65,13 +65,9 @@ var Board = function() {
   var board  = [ [], [], [] ];
 
   that.hasWinner = function() {
-    return ((board[0][0] == board[1][0]) && (board[1][0] == board[2][0]) && board[2][0] != null) ||
-           ((board[0][1] == board[1][1]) && (board[1][1] == board[2][1]) && board[2][1] != null) ||
-           ((board[0][2] == board[1][2]) && (board[1][2] == board[2][2]) && board[2][2] != null) ||
-           ((board[0][0] == board[0][1]) && (board[0][1] == board[2][2]) && board[2][2] != null) ||
-           ((board[1][0] == board[1][1]) && (board[1][1] == board[1][2]) && board[1][2] != null) ||
-           ((board[2][0] == board[2][1]) && (board[2][1] == board[2][2]) && board[2][2] != null) ||
-           ((board[0][0] == board[1][1]) && (board[1][1] == board[2][2]) && board[2][2] != null);
+    return rowWins(0) || rowWins(1) || rowWins(2) || 
+           columnWins(0) || columnWins(1) || columnWins(2) || 
+           diagonalWins();
   }
 
   that.display = function() {
@@ -111,6 +107,20 @@ var Board = function() {
       return false;
     }
     return true;
+  }
+
+  var rowWins = function(y) {
+    return (board[0][y] == board[1][y]) && (board[1][y] == board[2][y]) && board[2][y] != null;
+  }
+
+  var columnWins = function(x) {
+    return (board[x][0] == board[x][1]) && (board[x][1] == board[x][2]) && board[x][2] != null;
+  }
+
+  var diagonalWins = function() {
+    return ((board[0][0] == board[1][1]) && (board[1][1] == board[2][2]) && board[2][2] != null) ||
+           ((board[0][2] == board[1][1]) && (board[1][1] == board[2][0]) && board[2][0] != null);
+
   }
 
   var markOrBlank = function(x,y) {
