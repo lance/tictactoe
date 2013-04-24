@@ -34,7 +34,7 @@ var Player = function(mark, board) {
       prompt();
       possibleMove = input.readLine();
       coordinates = possibleMove.split(',');
-      if ( coordinates.length == 2 ) {
+      if ( isMove( coordinates ) ) {
         nextMove = new Move(coordinates[0].trim(), coordinates[1].trim(), that.mark);
       } else {
         print("Be sure to enter your move as two coordinates, e.g. '0,1'.");
@@ -46,6 +46,10 @@ var Player = function(mark, board) {
 
   var prompt = function() {
     System.out.print("[" + that.mark + "]'s turn: ");
+  }
+
+  var isMove = function(coords) {
+    return ( coords.length == 2 && !isNaN(coords[0]) && !isNaN(coords[1]) );
   }
 }
 
@@ -101,7 +105,7 @@ var Board = function() {
       print("Move is out of bounds.");
       return false;
     }
-    if (board[move.x][move.y]) {
+    if (board[move.x] && board[move.x][move.y]) {
       // space is taken
       print("Can't move there, the space is already taken!");
       return false;
