@@ -8,44 +8,39 @@ var Game = function() {
   var that    = this;
   var board   = new Board();
   var players = [new Player('X', board), new Player('O', board)];
+  var gameOver = function() {
+    print("Game over.");
+  }
 
   that.play = function() {
     print("Play some tic tac toe.");
     print("Enter moves as x,y coordinates. For example: 0,2");
     print("Type CTL-C to quit.");
 
-    while( !board.hasWinner() ) {
-      if (board.moves() == 9) {
-        board.display();
-        print("The game was a tie.");
-        return;
-      }
+    while( !board.gameOver() ) {
       nextPlayer = players[parseInt(board.moves()%2)];
-      nextPlayer.move();
+      nextPlayer.move( board );
     }
-    board.display();
-    print("Winner is " + nextPlayer.mark + ", in " + board.moves() + " moves.");
+    gameOver( board, nextPlayer );
   }
+
+  that.onGameOver = function(callback) {
+    gameOver = callback;
+  }
+
 }
 
-var Player = function(mark, board) {
+var Player = function(mark) {
   var nextMove = null;
   var that     = this;
 
   that.mark = mark;
-
-  that.move = function() {
+  that.move = function(board) {
     do {
-      that.prompt();
-      nextMove = new Move(that.mark);
-    } while( !board.isValidMove( nextMove ) );
-
-    board.move( nextMove );
-  }
-
-  that.prompt = function() {
-    board.display();
-    System.out.print("[" + that.mark + "]'s turn: ");
+      board.display();
+      System.out.print("[" + that.mark + "]'s turn: ");
+      nextMove = new Move( that.mark );
+    } while( !board.play( nextMove ) );
   }
 }
 
@@ -60,7 +55,7 @@ var Move = function(mark) {
     return !isNaN(that.x) && !isNaN(that.y);
   }
 
-  var construct = function() {
+  var getInput = function() {
     possibleMove = input.readLine();
     coordinates = possibleMove.split(',');
     if ( coordinates.length == 2 ) {
@@ -68,14 +63,13 @@ var Move = function(mark) {
       that.y = coordinates[1].trim();
     }
   }
-
-  construct();
+  getInput();
 }
 
 var Board = function() {
   var that   = this;
   var board  = [ [], [], [] ];
-  var moves  = 0;
+  var moves  = [];
 
   that.hasWinner = function() {
     return rowWins(0)    || rowWins(1)    || rowWins(2)    || 
@@ -84,7 +78,6 @@ var Board = function() {
   }
 
   that.display = function() {
-    // Show the current board
     print("");
     print(" 2  " + markOrBlank(0,2) + " | " + markOrBlank(1,2) + " | " + markOrBlank(2,2));
     print("    -----------");
@@ -95,32 +88,14 @@ var Board = function() {
     print("");
   }
 
-  that.move = function(move) {
-    board[move.x][move.y] = move.mark;
-    return moves++;
-  }
-
-  that.moves = function() {
-    return moves;
-  }
-
-  that.isValidMove = function(move) {
-    if (move == null) {
+  that.play = function(move) {
+    if (that.gameOver()) {
+      // game is over
+      print("The game is already over.");
       return false;
     }
     if (!move.isValid()) {
-      // The move wasn't valid for whatever reason
       print("Move is not valid.");
-      return false;
-    }
-    if (that.hasWinner()) {
-      // game is over
-      print("The game already has a winner: " + that.winner);
-      return false;
-    }
-    if (move.x < 0 || move.x > 2 || move.y < 0 || move.y > 2) {
-      // move is out of bounds
-      print("Move is out of bounds.");
       return false;
     }
     if (board[move.x] && board[move.x][move.y]) {
@@ -128,7 +103,22 @@ var Board = function() {
       print("Can't move there, the space is already taken!");
       return false;
     }
-    return true;
+    if (move.x < 0 || move.x > 2 || move.y < 0 || move.y > 2) {
+      // move is out of bounds
+      print("Move is out of bounds.");
+      return false;
+    }
+    board[move.x][move.y] = move.mark;
+    moves.push(move);
+    return moves.length;
+  }
+
+  that.moves = function() {
+    return moves.length;
+  }
+
+  that.gameOver = function() {
+    return that.hasWinner() || moves.length == 9;
   }
 
   var rowWins = function(y) {
@@ -142,7 +132,6 @@ var Board = function() {
   var diagonalWins = function() {
     return ((board[0][0] == board[1][1]) && (board[1][1] == board[2][2]) && board[2][2] != null) ||
            ((board[0][2] == board[1][1]) && (board[1][1] == board[2][0]) && board[2][0] != null);
-
   }
 
   var markOrBlank = function(x,y) {
@@ -150,4 +139,20 @@ var Board = function() {
   }
 }
 
-new Game().play();
+var gameOverFunc = function(board, winner) {
+  board.display();
+  if (board.hasWinner()) {
+    print("Winner is " + winner.mark + ", in " + board.moves() + " moves.");
+  } else {
+    print("The game was a tie.");
+  }
+  newGame();
+}
+
+var newGame = function() {
+  game = new Game();
+  game.onGameOver( gameOverFunc );
+  game.play();
+}
+
+newGame();
