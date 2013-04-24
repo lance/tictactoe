@@ -1,4 +1,8 @@
-var System = java.lang.System;
+var System            = java.lang.System;
+var Reader            = java.io.BufferedReader;
+var InputStreamReader = java.io.InputStreamReader;
+
+var input             = new Reader( new InputStreamReader( System.in ) );
 
 var Game = function() {
   var that    = this;
@@ -6,66 +10,75 @@ var Game = function() {
   var players = [new Player('X', board), new Player('O', board)];
 
   that.play = function() {
-    System.out.println("Play some tic tac toe.");
-    System.out.println("Enter moves as x,y coordinates. For example: 0,2");
+    print("Play some tic tac toe.");
+    print("Enter moves as x,y coordinates. For example: 0,2");
+    print("Type CTL-C to quit.");
 
-    moves = 0;
     while( !board.hasWinner() ) {
-      board.display();
-      nextPlayer = players[parseInt(moves++%2)];
+      if (board.moves() == 9) {
+        board.display();
+        print("The game was a tie.");
+        return;
+      }
+      nextPlayer = players[parseInt(board.moves()%2)];
       nextPlayer.move();
     }
     board.display();
-    print("Winner is " + nextPlayer.mark + ", in " + moves + " moves.");
+    print("Winner is " + nextPlayer.mark + ", in " + board.moves() + " moves.");
   }
 }
 
 var Player = function(mark, board) {
   var nextMove = null;
-  var Reader   = java.io.BufferedReader;
-  var input    = new Reader( new java.io.InputStreamReader( System.in ) );
   var that     = this;
 
   that.mark = mark;
 
   that.move = function() {
-    // get the next move from repl
-    while( !board.isValidMove( nextMove ) ) {
-      prompt();
-      possibleMove = input.readLine();
-      coordinates = possibleMove.split(',');
-      if ( isMove( coordinates ) ) {
-        nextMove = new Move(coordinates[0].trim(), coordinates[1].trim(), that.mark);
-      } else {
-        print("Be sure to enter your move as two coordinates, e.g. '0,1'.");
-      }
-    }
-    board.move(nextMove);
-    nextMove = null;
+    do {
+      that.prompt();
+      nextMove = new Move(that.mark);
+    } while( !board.isValidMove( nextMove ) );
+
+    board.move( nextMove );
   }
 
-  var prompt = function() {
+  that.prompt = function() {
+    board.display();
     System.out.print("[" + that.mark + "]'s turn: ");
-  }
-
-  var isMove = function(coords) {
-    return ( coords.length == 2 && !isNaN(coords[0]) && !isNaN(coords[1]) );
   }
 }
 
-var Move = function(x, y, mark) {
-  var that = this;
-  that.x = x;
-  that.y = y;
+var Move = function(mark) {
+  var that  = this;
+
   that.mark = mark;
+  that.x    = NaN;
+  that.y    = NaN;
+
+  that.isValid = function() {
+    return !isNaN(that.x) && !isNaN(that.y);
+  }
+
+  var construct = function() {
+    possibleMove = input.readLine();
+    coordinates = possibleMove.split(',');
+    if ( coordinates.length == 2 ) {
+      that.x = coordinates[0].trim();
+      that.y = coordinates[1].trim();
+    }
+  }
+
+  construct();
 }
 
 var Board = function() {
   var that   = this;
   var board  = [ [], [], [] ];
+  var moves  = 0;
 
   that.hasWinner = function() {
-    return rowWins(0) || rowWins(1) || rowWins(2) || 
+    return rowWins(0)    || rowWins(1)    || rowWins(2)    || 
            columnWins(0) || columnWins(1) || columnWins(2) || 
            diagonalWins();
   }
@@ -84,11 +97,20 @@ var Board = function() {
 
   that.move = function(move) {
     board[move.x][move.y] = move.mark;
-    // todo: check & set winner
+    return moves++;
+  }
+
+  that.moves = function() {
+    return moves;
   }
 
   that.isValidMove = function(move) {
     if (move == null) {
+      return false;
+    }
+    if (!move.isValid()) {
+      // The move wasn't valid for whatever reason
+      print("Move is not valid.");
       return false;
     }
     if (that.hasWinner()) {
