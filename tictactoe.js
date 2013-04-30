@@ -1,4 +1,4 @@
-var Game = require('game');
+var Game = require('lib/game');
 
 var gameOverFunc = function(board, winner) {
   board.display();
