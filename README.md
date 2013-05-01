@@ -24,3 +24,6 @@ Then play!
     $ ./bin/dynjs tictactoe.js
 
 Enjoy
+
+*NB:* The dynjs binary currently has issues running in a Linux environment, or any system with Gnu's `/usr/bin/env`.
+To play tictactoe on a Linux system, use the command `$ java -jar ./bin/dynjs tictactoe.js`.
